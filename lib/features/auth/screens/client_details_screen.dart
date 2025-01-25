@@ -22,21 +22,26 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: primaryColor),
+          onPressed: () {
+            Navigator.pop(context); // Volver a la pantalla anterior
+          },
+        ),
+        title: const Text(
+          'Registro Cliente',
+          style: TextStyle(color: primaryColor, fontSize: 20),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Título
-            Text(
-              'Registro Cliente',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
             const SizedBox(height: 20),
             // Campos obligatorios
             _buildTextField(

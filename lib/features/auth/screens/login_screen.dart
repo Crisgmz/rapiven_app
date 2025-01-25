@@ -1,17 +1,163 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:rapiven_app/features/auth/data/auth_service.dart';
+import 'package:rapiven_app/features/home/screens/business_home_screen.dart';
+import 'package:rapiven_app/features/home/screens/client_home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  bool _isLoading = false;
+  String? _emailError;
+  String? _passwordError;
+
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    try {
+      final String email = _emailController.text.trim();
+      final String password = _passwordController.text.trim();
+
+      // Validate email
+      if (email.isEmpty) {
+        _handleValidationError(
+            'emailError', 'El correo electrónico es obligatorio.');
+        return;
+      }
+
+      if (!_isValidEmailFormat(email)) {
+        _handleValidationError(
+            'emailError', 'El formato del correo no es válido.');
+        return;
+      }
+
+      // Validate password
+      if (password.isEmpty) {
+        _handleValidationError(
+            'passwordError', 'La contraseña es obligatoria.');
+        return;
+      }
+
+      if (password.length < 8) {
+        _handleValidationError(
+            'passwordError', 'La contraseña debe tener al menos 8 caracteres.');
+        return;
+      }
+
+      // Attempt login
+      final user =
+          await _authService.signInWithEmailAndPassword(email, password);
+
+      if (user != null) {
+        final role = await _authService.getUserRole(user.uid);
+        _navigateBasedOnRole(role);
+      }
+    } on FirebaseAuthException catch (e) {
+      _handleFirebaseAuthError(e);
+    } catch (e) {
+      _showGenericError(
+          'Error al iniciar sesión, las credenciales no son correctas');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleValidationError(String errorType, String message) {
+    setState(() {
+      if (errorType == 'emailError') {
+        _emailError = message;
+      } else {
+        _passwordError = message;
+      }
+      _isLoading = false;
+    });
+  }
+
+  bool _isValidEmailFormat(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  void _navigateBasedOnRole(String role) {
+    switch (role) {
+      case 'business':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const BusinessHomeScreen()),
+        );
+        break;
+      case 'client':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ClientHomeScreen()),
+        );
+        break;
+      default:
+        _showGenericError('Rol no reconocido');
+    }
+  }
+
+  void _handleFirebaseAuthError(FirebaseAuthException e) {
+    String errorMessage;
+    switch (e.code) {
+      case 'user-not-found':
+        errorMessage = 'No existe una cuenta con este correo.';
+        setState(() => _emailError = errorMessage);
+        break;
+      case 'wrong-password':
+        errorMessage = 'La contraseña es incorrecta.';
+        setState(() => _passwordError = errorMessage);
+        break;
+      case 'invalid-credential':
+        errorMessage = 'El formato de las credenciales es inválido.';
+        setState(() => _emailError = errorMessage);
+        break;
+      default:
+        errorMessage =
+            'Error al iniciar sesión, las credenciales no son correctas';
+    }
+    _showGenericError(errorMessage);
+  }
+
+  void _showGenericError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF011f41);
 
     return Scaffold(
-      backgroundColor: Colors.white, // Fondo blanco
-      resizeToAvoidBottomInset:
-          true, // Ajusta el contenido cuando el teclado se abre
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -19,7 +165,6 @@ class LoginScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Título
               Text(
                 'Iniciar Sesión',
                 textAlign: TextAlign.center,
@@ -30,11 +175,12 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              // Correo electrónico
               TextField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Correo Electrónico',
                   labelStyle: const TextStyle(color: primaryColor),
+                  errorText: _emailError,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -43,17 +189,26 @@ class LoginScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     borderSide:
                         const BorderSide(color: primaryColor, width: 2.5),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2.5),
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(color: primaryColor),
               ),
               const SizedBox(height: 20),
-              // Contraseña
               TextField(
+                controller: _passwordController,
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
                   labelStyle: const TextStyle(color: primaryColor),
+                  errorText: _passwordError,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -63,30 +218,36 @@ class LoginScreen extends StatelessWidget {
                     borderSide:
                         const BorderSide(color: primaryColor, width: 2.5),
                   ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2.5),
+                  ),
                 ),
                 obscureText: true,
                 style: const TextStyle(color: primaryColor),
               ),
               const SizedBox(height: 30),
-              // Botón de iniciar sesión
-              FilledButton(
-                onPressed: () {
-                  // Lógica de inicio de sesión
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Iniciar Sesión',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : FilledButton(
+                      onPressed: _login,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        'Iniciar Sesión',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
               const SizedBox(height: 10),
-              // Texto de registro debajo del botón principal
               TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/register');
@@ -100,7 +261,6 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              // Línea divisoria
               Row(
                 children: const [
                   Expanded(child: Divider(thickness: 1)),
@@ -114,35 +274,35 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 20),
               // Botón de iniciar sesión con teléfono
               _buildOutlinedButton(
-                label: 'Iniciar Sesión con Teléfono',
+                label: 'Continuar con Teléfono',
                 icon: Icons.phone,
                 onPressed: () {
-                  // Lógica de inicio de sesión con Teléfono
+                  // Implementación futura
                 },
               ),
               const SizedBox(height: 10),
               // Botones de redes sociales
               _buildOutlinedButton(
                 label: 'Continuar con Google',
-                icon: FontAwesomeIcons.google, // Ícono de Google
+                icon: FontAwesomeIcons.google,
                 onPressed: () {
-                  // Lógica de inicio de sesión con Google
+                  // Implementación futura
                 },
               ),
               const SizedBox(height: 10),
               _buildOutlinedButton(
                 label: 'Continuar con Facebook',
-                icon: FontAwesomeIcons.facebook, // Ícono de Facebook
+                icon: FontAwesomeIcons.facebook,
                 onPressed: () {
-                  // Lógica de inicio de sesión con Facebook
+                  // Implementación futura
                 },
               ),
               const SizedBox(height: 10),
               _buildOutlinedButton(
                 label: 'Continuar con Apple',
-                icon: FontAwesomeIcons.apple, // Ícono de Apple
+                icon: FontAwesomeIcons.apple,
                 onPressed: () {
-                  // Lógica de inicio de sesión con Apple
+                  // Implementación futura
                 },
               ),
             ],
@@ -152,27 +312,38 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  // Función para construir botones personalizados estilo outlined
   Widget _buildOutlinedButton({
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
   }) {
     const primaryColor = Color(0xFF011f41);
-    return OutlinedButton.icon(
+    return OutlinedButton(
       onPressed: onPressed,
-      icon: Icon(icon, color: primaryColor),
-      label: Text(
-        label,
-        style:
-            const TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-      ),
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: primaryColor, width: 2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 15.0),
+            child: Icon(icon, color: primaryColor),
+          ),
+          Expanded(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

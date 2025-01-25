@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "313818767229",
+    "project_id": "rapiven",
+    "storage_bucket": "rapiven.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313818767229:android:4c644da7c75e26815df614",
+        "android_client_info": {
+          "package_name": "com.example.rapiven_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdKODMTE-QKmvQyP3FSkKmKv1_r3EDaRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

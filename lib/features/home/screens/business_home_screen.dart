@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:rapiven_app/features/menu/screens/menu_screen.dart';
+import 'package:rapiven_app/features/settings/screens/settings_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class BusinessHomeScreen extends StatefulWidget {
+  const BusinessHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<BusinessHomeScreen> createState() => _BusinessHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _BusinessHomeScreenState extends State<BusinessHomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeContent(), // Pantalla principal
+    BusinessHomeContent(), // Pantalla principal del negocio
     MenuScreen(), // Pantalla del Menú
     SettingsScreen(), // Pantalla de Configuración
   ];
@@ -20,22 +22,23 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 1, 31, 65), // Fondo personalizado
+        backgroundColor: Color.fromARGB(255, 1, 31, 65),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Rapiven',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-                textAlign: TextAlign.center),
-            // Título personalizado
+            Text(
+              'Rapiven - Negocio',
+              style: TextStyle(fontSize: 20, color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
             PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'Configuración') {
                   setState(() {
-                    _currentIndex = 2; // Cambia a la pantalla de Configuración
+                    _currentIndex = 2; // Cambia a Configuración
                   });
                 } else if (value == 'Cerrar Sesión') {
-                  // Agrega la lógica de cierre de sesión aquí
+                  // Lógica para cerrar sesión
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Sesión cerrada')),
                   );
@@ -97,8 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
+class BusinessHomeContent extends StatelessWidget {
+  const BusinessHomeContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +109,8 @@ class HomeContent extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // Saludos y ganancia total
           Text(
-            'Saludos, Cristian',
+            'Saludos, Cristian (Negocio)',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20),
@@ -135,7 +137,6 @@ class HomeContent extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20),
-          // Botones principales
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
@@ -191,34 +192,6 @@ class HomeContent extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class MenuScreen extends StatelessWidget {
-  const MenuScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Pantalla del Menú',
-        style: TextStyle(fontSize: 18),
-      ),
-    );
-  }
-}
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Pantalla de Configuración',
-        style: TextStyle(fontSize: 18),
       ),
     );
   }

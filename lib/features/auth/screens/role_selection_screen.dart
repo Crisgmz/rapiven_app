@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rapiven_app/features/auth/screens/personal_details.dart';
+import 'package:rapiven_app/features/auth/screens/client_details_screen.dart';
+import 'package:rapiven_app/features/auth/screens/business_personal_details_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -17,6 +18,7 @@ class RoleSelectionScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Título principal
               Text(
                 '¿Eres Cliente o Restaurante?',
                 textAlign: TextAlign.center,
@@ -26,24 +28,23 @@ class RoleSelectionScreen extends StatelessWidget {
                   color: primaryColor,
                 ),
               ),
-              const SizedBox(height: 20),
-              _buildOutlinedButton(
-                context: context,
+              const SizedBox(height: 40),
+              // Botón de Cliente
+              RoleSelectionButton(
                 label: 'Cliente',
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          PersonalDetailsScreen(role: 'Cliente'),
+                      builder: (context) => const ClientDetailsScreen(),
                     ),
                   );
                 },
                 primaryColor: primaryColor,
               ),
-              const SizedBox(height: 10),
-              _buildOutlinedButton(
-                context: context,
+              const SizedBox(height: 20),
+              // Botón de Restaurante
+              RoleSelectionButton(
                 label: 'Restaurante',
                 onPressed: () {
                   Navigator.push(
@@ -62,13 +63,23 @@ class RoleSelectionScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildOutlinedButton({
-    required BuildContext context,
-    required String label,
-    required VoidCallback onPressed,
-    required Color primaryColor,
-  }) {
+// Botón modular para Cliente y Restaurante
+class RoleSelectionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final Color primaryColor;
+
+  const RoleSelectionButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(

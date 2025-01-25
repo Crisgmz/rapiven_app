@@ -40,6 +40,9 @@ dependencies:
   social_login_buttons: ^1.0.7
   font_awesome_flutter: ^10.8.0
   image_picker: ^1.1.2
+  cloud_firestore: ^5.6.2
+  firebase_storage: ^12.4.1
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
